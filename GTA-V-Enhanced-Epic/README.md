@@ -10,6 +10,8 @@ Without the fix, the game exits with one of these errors:
 - `ERR_GFX_D3D_NOD3D12`
 - `ERR_GFX_INIT` (once the first one is fixed)
 
+Once the game runs, character dialogue is silent and some other sounds are too quiet.
+
 ## Tested on
 
 | | |
@@ -37,6 +39,18 @@ D3DMetal reports an AMD GPU. On AMD, the game creates its device through AMD AGS
 (`amd_ags_x64.dll` → `agsDriverExtensionsDX12_CreateDevice`) instead of `D3D12CreateDevice`. AGS
 needs a real AMD driver, so device creation fails on a Mac. With AGS disabled, the game takes the
 plain D3D12 path through D3DMetal.
+
+### No dialogue, quiet sounds
+
+Unlike GTA V Legacy, Enhanced outputs audio through Windows Spatial Audio (`ISpatialAudioClient`),
+which places dialogue in the center channel and other sounds in the center and surround channels.
+Wine's Spatial Audio support is limited. On the Mac's stereo output, those channels are lost:
+dialogue goes silent and some sounds get quieter.
+
+The game has a launch parameter, `-disableSpatialAudioClient`, that turns Spatial Audio off and
+makes it mix to plain stereo. The parameter is registered next to the known `-noAudioHardware`
+parameter in the game's code. Windows users report the same symptom with surround output and fix it
+by switching to stereo.
 
 ## What the fix contains
 
@@ -115,6 +129,16 @@ In the game's settings in GameHub:
   "A game is currently running".
 - Remove `D3DM_VENDOR_ID` and `D3DM_DEVICE_ID` if you set them. The fix relies on D3DMetal's
   default AMD adapter.
+- Launch argument `-disableSpatialAudioClient`, to bring back dialogue and fix the quiet sounds.
+
+  Instead of the GameHub launch argument, you can create `commandline.txt` in the game folder,
+  next to `GTA5_Enhanced.exe`, with that single line:
+
+  ```
+  -disableSpatialAudioClient
+  ```
+
+  The Rockstar Launcher passes the file to the game as `@commandline.txt`. Both ways were tested.
 
 ## Expected after the fix
 

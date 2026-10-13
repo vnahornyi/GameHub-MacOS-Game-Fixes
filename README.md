@@ -9,7 +9,7 @@ and install and uninstall steps.
 
 | Game | Store | Graphics stack | Fixes | Folder |
 |---|---|---|---|---|
-| GTA V Enhanced | Epic Games | `gptk-4.0-2` | `ERR_GFX_D3D_NOD3D12`, `ERR_GFX_INIT` | [GTA-V-Enhanced-Epic](GTA-V-Enhanced-Epic/) |
+| GTA V Enhanced | Epic Games | `gptk-4.0-2` | `ERR_GFX_D3D_NOD3D12`, `ERR_GFX_INIT`, missing dialogue | [GTA-V-Enhanced-Epic](GTA-V-Enhanced-Epic/) |
 
 ## Contributing
 
