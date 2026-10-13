@@ -90,6 +90,12 @@ game folder:
 - To find the code that called you, log `RtlCaptureStackBackTrace` frames as `module+offset`.
 - Write logs to a fixed file path through `Z:\...`.
 
+Make vtable patching thread-safe. Games create devices from several threads at once. If two threads
+patch the same vtable, the second one saves the hook as the "original", and the hook then calls
+itself until the stack overflows (`0xc00000fd`). Patch under a lock, and skip vtables that are
+already patched. Builds with logging are slower and can hide this race, so always test the shipped
+build in the game.
+
 A proxy for one DLL can break another stack component. For example, a proxy `dxgi.dll` gets picked
 up by GPTK's own `d3d12`. Hook from the DLL the game calls directly instead.
 

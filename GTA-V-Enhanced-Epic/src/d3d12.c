@@ -6,7 +6,12 @@ static HMODULE R; static FARPROC P(const char*n){ if(!R) R=loadreal(L"d3d12.dll"
 typedef HRESULT (WINAPI*PCD)(IUnknown*,int,REFIID,void**);
 static const GUID IID_IDXGIFactory1x={0x770aae78,0xf26f,0x4dba,{0xa8,0x29,0x25,0x3c,0x83,0xd1,0xb3,0x87}};
 typedef void* (STDMETHODCALLTYPE *X8)(void*,void*,void*,void*,void*,void*,void*,void*);
-static void hookvt(void** vt, int n, void** orig, void** th, const char* nm){ DWORD old; if(!VirtualProtect(vt,n*sizeof(void*),PAGE_READWRITE,&old)){plog("  VP fail %s",nm);return;} for(int i=0;i<n;i++){ if(vt[i]==th[i]) {VirtualProtect(vt,n*sizeof(void*),old,&old); return;} } for(int i=0;i<n;i++){orig[i]=vt[i]; vt[i]=th[i];} VirtualProtect(vt,n*sizeof(void*),old,&old); plog("  hooked %s vtable %p",nm,vt); }
+/* The game creates devices from several threads at once: every vtable patch runs under this lock,
+   and an already patched vtable is left alone, so orig[] never points back at a hook. */
+static SRWLOCK hooklock = SRWLOCK_INIT;
+static void hookvt_locked(void** vt, int n, void** orig, void** th, const char* nm);
+static void hookvt(void** vt, int n, void** orig, void** th, const char* nm){ AcquireSRWLockExclusive(&hooklock); hookvt_locked(vt,n,orig,th,nm); ReleaseSRWLockExclusive(&hooklock); }
+static void hookvt_locked(void** vt, int n, void** orig, void** th, const char* nm){ DWORD old; if(!VirtualProtect(vt,n*sizeof(void*),PAGE_READWRITE,&old)){plog("  VP fail %s",nm);return;} for(int i=0;i<n;i++){ if(vt[i]==th[i]) {VirtualProtect(vt,n*sizeof(void*),old,&old); return;} } for(int i=0;i<n;i++){orig[i]=vt[i]; vt[i]=th[i];} VirtualProtect(vt,n*sizeof(void*),old,&old); plog("  hooked %s vtable %p",nm,vt); }
 static void* Out_o[29]; static int Out_c[29];
 static void* STDMETHODCALLTYPE Out0(void*a,void*b,void*c,void*d,void*e,void*f,void*g_,void*h){ void* r=((X8)Out_o[0])(a,b,c,d,e,f,g_,h); if((Out_c[0]++<12 || (unsigned)(UINT_PTR)r>=0x80000000u) && 0!=1 && 0!=2) { plog("  %s::%s(%s) -> %08lx","Out","QueryInterface",g((const GUID*)b),(unsigned long)(UINT_PTR)r); }  return r; }
 static void* STDMETHODCALLTYPE Out1(void*a,void*b,void*c,void*d,void*e,void*f,void*g_,void*h){ void* r=((X8)Out_o[1])(a,b,c,d,e,f,g_,h); if((Out_c[1]++<12 || (unsigned)(UINT_PTR)r>=0x80000000u) && 1!=1 && 1!=2) { plog("  %s::%s(%p,%p) -> %08lx","Out","AddRef",b,c,(unsigned long)(UINT_PTR)r); }  return r; }
@@ -156,7 +161,9 @@ static void hookmore(void** vt){ DWORD old; VirtualProtect(vt,64*sizeof(void*),P
   orig[41]=(G8)vt[41]; vt[41]=(void*)h41;
   orig[7]=(G8)vt[7]; vt[7]=(void*)h7;
   VirtualProtect(vt,64*sizeof(void*),old,&old); }
-static void hookdev(void* dev){ if(!dev||hooked) return; void** vt=*(void***)dev; DWORD old;
+static void hookdev_locked(void* dev);
+static void hookdev(void* dev){ if(!dev) return; AcquireSRWLockExclusive(&hooklock); hookdev_locked(dev); ReleaseSRWLockExclusive(&hooklock); }
+static void hookdev_locked(void* dev){ if(hooked) return; void** vt=*(void***)dev; DWORD old; if(vt[13]==(void*)myCFS){ hooked=1; return; }
   if(VirtualProtect(vt,14*sizeof(void*),PAGE_READWRITE,&old)){ realQI=(PQI)vt[0]; realCFS=(PCFS)vt[13]; vt[0]=(void*)myQI; vt[13]=(void*)myCFS; VirtualProtect(vt,14*sizeof(void*),old,&old); hookmore(vt); hooked=1; plog("  hooked device vtable %p",vt);} else plog("  VirtualProtect failed %lu",GetLastError()); }
 
 extern IMAGE_DOS_HEADER __ImageBase;

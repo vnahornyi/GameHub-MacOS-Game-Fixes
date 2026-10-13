@@ -58,10 +58,9 @@ The wrapper also adjusts a few D3DMetal answers during adapter selection:
 The game may pass without these adjustments, but the tested configuration includes them, so they
 stay.
 
-Test status: the game ran with a build of this wrapper that differed only in having diagnostic
-logging and a hardcoded GPTK path. The packaged `d3d12.dll` was tested under GameHub's Wine
-environment with a test program: it found GPTK through `WINEDLLPATH`, created a device and loaded
-the `D3D12Core.dll` stub. It has not yet been run with the game itself.
+Test status: in the tested configuration above, the game launches and plays with the packaged
+`d3d12.dll` installed by `install.sh` on a clean game folder, with an unmodified `gptk-4.0-2`
+package.
 
 ## Install
 
