@@ -61,6 +61,10 @@ are not included.
 The wrapper finds the real GPTK `d3d12.dll` through `WINEDLLPATH`, which GameHub sets.
 `WINE_GPTK_LIBD3DSHARED_PATH` is the fallback. No user path is hardcoded.
 
+Test status: in the tested configuration above, the game starts and plays with the packaged
+`d3d12.dll` installed by `install.sh`, with an unmodified `gptk-4.0-2` package and the
+`--launcher-skip` launch argument. The launch log shows no exceptions and a clean exit.
+
 ## Install
 
 1. Close the game and Steam in GameHub.
