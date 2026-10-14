@@ -10,6 +10,7 @@ and install and uninstall steps.
 | Game | Store | Graphics stack | Fixes | Folder |
 |---|---|---|---|---|
 | GTA V Enhanced | Epic Games | `gptk-4.0-2` | `ERR_GFX_D3D_NOD3D12`, `ERR_GFX_INIT`, missing dialogue | [GTA-V-Enhanced-Epic](GTA-V-Enhanced-Epic/) |
+| The Witcher 3: Wild Hunt Remastered | Steam | `gptk-4.0-2` | black screen at startup (D3DMetal shader converter crash) | [The-Witcher-3-Remastered-Steam](The-Witcher-3-Remastered-Steam/) |
 
 ## Contributing
 
